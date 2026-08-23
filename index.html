@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#6657e8">
+  <meta name="description" content="ADHD-friendly weekly life dashboard for schedule, uni, gym, basketball and sleep.">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <title>My Life Dashboard</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="shell">
+  <div class="topbar">
+    <div>
+      <h1>My Life Dashboard 🌱</h1>
+      <div class="muted">Schedule, university, basketball, gym, rehab and sleep — without needing ChatGPT open.</div>
+    </div>
+    <div class="topActions toolbar">
+      <button class="btn" id="installBtn" hidden>📲 Install app</button>
+      <button class="btn" id="exportBtn">⬇ Backup</button>
+      <button class="btn" id="importBtn">⬆ Restore</button>
+      <input id="importFile" type="file" accept="application/json" hidden>
+    </div>
+  </div>
+
+  <nav class="nav" aria-label="Main views">
+    <button class="btn active" data-view="today">☀️ Today</button>
+    <button class="btn" data-view="week">📅 Week</button>
+    <button class="btn" data-view="uni">🎓 Uni</button>
+    <button class="btn" data-view="fitness">🏋️ Fitness</button>
+    <button class="btn" data-view="sleep">🌙 Sleep</button>
+    <button class="btn" data-view="settings">⚙️ Settings</button>
+  </nav>
+
+  <main>
+    <section class="view active" id="todayView">
+      <div class="grid two">
+        <div class="card hero">
+          <div class="date" id="todayDate"></div>
+          <div class="next" id="nextTitle">Loading today…</div>
+          <div class="countdown" id="nextCountdown"></div>
+          <div class="toolbar">
+            <button class="btn primary" id="addTodayBtn">＋ Add block</button>
+            <label class="switchline"><input type="checkbox" id="lowEnergyToggle"> Low-energy mode</label>
+          </div>
+        </div>
+        <div class="card hero leaveHero">
+          <div class="date">🚗 NEXT LEAVE HOME</div>
+          <div class="next" id="nextLeave">No departure coming up</div>
+          <div class="countdown" id="nextLeaveCountdown"></div>
+        </div>
+      </div>
+      <div class="spacer12"></div>
+      <div class="card">
+        <div class="subjectHeader"><div><h2 id="todayHeading">Today</h2><div class="muted" id="todayFocus"></div></div><button class="btn" id="editDayFocusBtn">Edit focus</button></div>
+        <div class="timeline" id="todayTimeline"></div>
+      </div>
+    </section>
+
+    <section class="view" id="weekView">
+      <div class="card">
+        <div class="subjectHeader"><div><h2>Week at a glance</h2><div class="muted">Red blocks are leave-home anchors. Tap a day to edit it in Today view.</div></div></div>
+        <div class="weekgrid" id="weekGrid"></div>
+      </div>
+    </section>
+
+    <section class="view" id="uniView">
+      <div class="grid two" id="uniGrid"></div>
+      <div class="spacer12"></div>
+      <div class="card">
+        <h2>Study rule</h2>
+        <div class="callout">Keep tasks concrete: “open rubric + create headings” beats “work on assignment.” Until MIS771’s 11 September deadline, favour MIS771 in the first study block and MIS710 in the second.</div>
+      </div>
+    </section>
+
+    <section class="view" id="fitnessView">
+      <div class="grid two">
+        <div class="card">
+          <h2>🏀 Basketball load</h2>
+          <div class="muted">Baseline: Thursday + Sunday. Tuesday stays optional while the knees build capacity.</div>
+          <div class="spacer12"></div>
+          <label for="sundayGame">Sunday game start</label>
+          <select id="sundayGame">
+            <option value="17:30">5:30pm</option>
+            <option value="18:15">6:15pm</option>
+            <option value="19:00">7:00pm</option>
+          </select>
+          <div class="callout" id="gameCalc" style="margin-top:12px"></div>
+        </div>
+        <div class="card">
+          <h2>🦵 Rehab</h2>
+          <div class="muted">Keep rehab consistent and progressive. Exercise specifics should come from your physio/clinician.</div>
+          <div class="spacer12"></div>
+          <div class="taskList" id="rehabChecklist"></div>
+        </div>
+      </div>
+      <div class="spacer12"></div>
+      <div class="card">
+        <div class="subjectHeader">
+          <div><h2>🏋️ Gym sessions</h2><div class="muted">This is intentionally future-ready. Later we can build your exact exercise library from what your gym has and what your wrists/knees tolerate.</div></div>
+          <button class="btn primary" id="addExerciseBtn">＋ Add exercise</button>
+        </div>
+        <div class="toolbar">
+          <button class="btn active" data-session="A">Monday · Gym A</button>
+          <button class="btn" data-session="B">Wednesday · Gym B</button>
+        </div>
+        <div class="callout" id="gymFocus"></div>
+        <div id="exerciseList"></div>
+      </div>
+    </section>
+
+    <section class="view" id="sleepView">
+      <div class="card">
+        <h2>🌙 Gradual sleep shift</h2>
+        <div class="muted">Tap your current stage. Aim for consistency rather than forcing the final target overnight.</div>
+        <div class="spacer12"></div>
+        <div class="sleepStages" id="sleepStages"></div>
+        <div class="callout" style="margin-top:14px"><b>Rule:</b> if you wake too late for a morning uni block, skip that block. Do not push it into 2–5am and restart the cycle.</div>
+      </div>
+      <div class="spacer12"></div>
+      <div class="grid two">
+        <div class="card"><h3>Night shutdown</h3><div class="taskList" id="nightChecklist"></div></div>
+        <div class="card"><h3>Morning anchor</h3><div class="taskList" id="morningChecklist"></div></div>
+      </div>
+    </section>
+
+    <section class="view" id="settingsView">
+      <div class="grid two">
+        <div class="card">
+          <h2>⚙️ Schedule settings</h2>
+          <label for="workDrive">Work drive (minutes)</label><input id="workDrive" type="number" min="0" max="120">
+          <label for="gymDrive">Gym drive (minutes)</label><input id="gymDrive" type="number" min="0" max="120">
+          <label for="ballDrive">Basketball drive (minutes)</label><input id="ballDrive" type="number" min="0" max="120">
+          <label for="workPrep">Work getting-ready time (minutes)</label><input id="workPrep" type="number" min="0" max="180">
+          <label for="sportPrep">Sport prep when not already ready (minutes)</label><input id="sportPrep" type="number" min="0" max="180">
+          <div class="toolbar"><button class="btn primary" id="saveSettings">Save settings</button></div>
+        </div>
+        <div class="card">
+          <h2>Data & future upgrades</h2>
+          <div class="muted">Everything you edit is stored on this device in your browser. Use Backup occasionally.</div>
+          <div class="spacer12"></div>
+          <div class="callout"><b>Planned architecture:</b> schedule + exercise library + workout history + uni tasks + sleep stages. We can add fields later without throwing this version away.</div>
+          <div class="toolbar"><button class="btn danger" id="resetApp">Reset all app data</button></div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<nav class="bottomNav" aria-label="Mobile navigation">
+  <button class="active" data-view="today">☀️<br>Today</button>
+  <button data-view="week">📅<br>Week</button>
+  <button data-view="uni">🎓<br>Uni</button>
+  <button data-view="fitness">🏋️<br>Fitness</button>
+  <button data-view="sleep">🌙<br>Sleep</button>
+</nav>
+
+<dialog id="eventDialog">
+  <form id="eventForm" method="dialog">
+    <h2 id="eventDialogTitle">Edit block</h2>
+    <input type="hidden" id="eventDay"><input type="hidden" id="eventId">
+    <div class="formgrid">
+      <div><label for="eventStart">Start</label><input type="time" id="eventStart" required></div>
+      <div><label for="eventEnd">End</label><input type="time" id="eventEnd"></div>
+    </div>
+    <label for="eventTitle">Title</label><input type="text" id="eventTitle" required>
+    <label for="eventType">Type</label>
+    <select id="eventType">
+      <option value="free">Normal/free</option><option value="uni">Uni</option><option value="gym">Gym</option><option value="ball">Basketball</option><option value="work">Work</option><option value="rehab">Rehab</option><option value="food">Food</option><option value="sleep">Sleep</option><option value="leave">Leave home</option>
+    </select>
+    <label class="switchline"><input type="checkbox" id="eventOptional"> Optional / hide in low-energy mode</label>
+    <label for="eventNote">Note</label><textarea id="eventNote"></textarea>
+    <div class="toolbar"><button class="btn primary" value="save" type="submit">Save</button><button class="btn" value="cancel" type="button" id="cancelEvent">Cancel</button><button class="btn danger" value="delete" type="button" id="deleteEvent">Delete</button></div>
+  </form>
+</dialog>
+
+<dialog id="exerciseDialog">
+  <form id="exerciseForm" method="dialog">
+    <h2 id="exerciseDialogTitle">Exercise</h2>
+    <input type="hidden" id="exerciseId">
+    <label for="exerciseName">Exercise</label><input type="text" id="exerciseName" required>
+    <div class="formgrid">
+      <div><label for="exerciseSets">Sets</label><input type="text" id="exerciseSets" placeholder="3"></div>
+      <div><label for="exerciseReps">Reps</label><input type="text" id="exerciseReps" placeholder="8–12"></div>
+    </div>
+    <label for="exerciseCategory">Category</label>
+    <select id="exerciseCategory"><option>Upper body</option><option>Lower body</option><option>Core</option><option>Rehab</option><option>Mobility</option></select>
+    <label class="switchline"><input type="checkbox" id="exerciseNeutral"> Neutral-grip friendly</label>
+    <label class="switchline"><input type="checkbox" id="exerciseCuff"> Cuff/strap friendly</label>
+    <label class="switchline"><input type="checkbox" id="exerciseKnee"> Knee/rehab related</label>
+    <label for="exerciseNote">Notes</label><textarea id="exerciseNote"></textarea>
+    <div class="toolbar"><button class="btn primary" type="submit">Save</button><button class="btn" type="button" id="cancelExercise">Cancel</button><button class="btn danger" type="button" id="deleteExercise">Delete</button></div>
+  </form>
+</dialog>
+<script src="app.js" defer></script>
+</body>
+</html>
