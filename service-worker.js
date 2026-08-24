@@ -1,4 +1,4 @@
-const CACHE='life-dashboard-v4';
+const CACHE='life-dashboard-v4.1';
 const CORE=[
   './',
   './index.html',
@@ -30,7 +30,7 @@ self.addEventListener('fetch',event=>{
 
   if(req.mode==='navigate'){
     event.respondWith(
-      fetch(req).then(resp=>{
+      fetch(req,{cache:'no-store'}).then(resp=>{
         const copy=resp.clone();
         caches.open(CACHE).then(cache=>cache.put('./index.html',copy));
         return resp;
@@ -40,7 +40,7 @@ self.addEventListener('fetch',event=>{
   }
 
   event.respondWith(
-    fetch(req).then(resp=>{
+    fetch(req,{cache:'no-store'}).then(resp=>{
       const copy=resp.clone();
       caches.open(CACHE).then(cache=>cache.put(req,copy));
       return resp;
