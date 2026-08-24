@@ -8,7 +8,7 @@ const SLEEP_STAGES=[['5:00 am','1:00 pm'],['4:30 am','12:30 pm'],['4:00 am','12:
 function uid(){return Math.random().toString(36).slice(2,9)}
 function ev(start,end,title,type='free',note='',optional=false){return{id:uid(),start,end,title,type,note,optional}}
 function ex(name,sets,reps,category,note='',neutral=false,cuff=false,knee=false){return{id:uid(),name,sets,reps,category,note,neutral,cuff,knee}}
-function mins(t){if(!t||!/\d\d:\d\d/.test(t))return null;const[h,m]=t.split(':').map(Number);return h*60+m}
+function mins(t){if(!t||!/^\d\d:\d\d$/.test(t))return null;const[h,m]=t.split(':').map(Number);return h*60+m}
 function logicalMinutes(t){const m=mins(t);return m==null?9999:(m<300?m+1440:m)}
 function fmt(t){if(!t)return'';let[h,m]=t.split(':').map(Number);const ap=h>=12?'pm':'am';h=h%12||12;return `${h}:${String(m).padStart(2,'0')} ${ap}`}
 function fmtRange(a,b){return b&&b!==a?`${fmt(a)} – ${fmt(b)}`:fmt(a)}
@@ -20,10 +20,11 @@ function daysUntil(dateStr){const t=new Date(dateStr+'T12:00:00'),n=new Date();n
 function partOfDay(t){const m=mins(t);if(m==null)return'';for(const[name,start,end]of PARTS){if(start<end&&m>=start*60&&m<end*60)return name;if(start>end&&(m>=start*60||m<end*60))return name}return''}
 function currentLogical(){const d=new Date(),m=d.getHours()*60+d.getMinutes();return m<300?m+1440:m}
 function untilText(t){const diff=logicalMinutes(t)-currentLogical();if(diff<=0)return'Now / in progress';const h=Math.floor(diff/60),m=diff%60;return h?`in ${h}h${m?` ${m}m`:''}`:`in ${m}m`}
+
 let defaultsData=null;
 async function loadDefaults(){const r=await fetch('./defaults.json?v=4.0.0',{cache:'no-store'});if(!r.ok)throw new Error('defaults');defaultsData=await r.json();return defaultsData}
 function cloneDefaults(){return JSON.parse(JSON.stringify(defaultsData))}
-function migrate(d,b=defaultsData){d.settings={...b.settings,...(d.settings||{})};d.focus={...b.focus,...(d.focus||{})};d.days={...b.days,...(d.days||{})};d.uni=d.uni||b.uni;d.rehab=Array.isArray(d.rehab)?d.rehab:b.rehab;d.gym=d.gym||b.gym;d.sundayGame=d.sundayGame||b.sundayGame;d.currentSleep=Number.isInteger(d.currentSleep)?d.currentSleep:0;d.lowEnergy=!!d.lowEnergy;d.sleepChecks=d.sleepChecks||b.sleepChecks;if(!d.sleepChecks.night)d.sleepChecks.night=b.sleepChecks.night;if(!d.sleepChecks.morning)d.sleepChecks.morning=b.sleepChecks.morning;if(!d.days.sun?.length)buildSunday(d);return d}
+function migrate(d,b=defaultsData){d.settings={...b.settings,...(d.settings||{})};d.focus={...b.focus,...(d.focus||{})};d.days={...b.days,...(d.days||{})};d.uni=d.uni||b.uni;d.rehab=Array.isArray(d.rehab)?d.rehab:b.rehab;d.gym=d.gym||b.gym;d.sundayGame=d.sundayGame||b.sundayGame;d.currentSleep=Number.isInteger(d.currentSleep)?d.currentSleep:0;d.lowEnergy=!!d.lowEnergy;d.sleepChecks=d.sleepChecks||b.sleepChecks;if(!d.sleepChecks.night)d.sleepChecks.night=b.sleepChecks.night;if(!d.sleepChecks.morning)d.sleepChecks.morning=b.sleepChecks.morning;if(!d.days.sun?.length)buildSunday(d);if((d.schemaVersion||0)<4){for(const day of DAY_KEYS){d.days[day]=[...(d.days[day]||[])].sort((a,b)=>logicalMinutes(a.start)-logicalMinutes(b.start))}d.schemaVersion=4}return d}
 async function load(){const defaults=await loadDefaults();try{const raw=localStorage.getItem(STORAGE_KEY);return raw?migrate(JSON.parse(raw),defaults):migrate(defaults,defaults)}catch{return migrate(defaults,defaults)}}
 function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(data))}
 function persist(msg){save();if(msg)toast(msg)}
